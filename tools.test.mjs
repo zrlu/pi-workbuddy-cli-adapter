@@ -81,3 +81,18 @@ test("plain final answers work without a JSON envelope", () => {
   assert.deepEqual(parseBridgeResponse("The repository is ready.", [bash]), { text: "The repository is ready.", calls: [] });
   assert.throws(() => parseBridgeResponse('{"text":"bad","toolCalls":[', [bash]), /invalid tool-response/);
 });
+
+test("explanatory preamble before a trailing tool-response envelope is accepted", () => {
+  const response = parseBridgeResponse('The earlier create raced the commit. Retrying serially.\n\n' + JSON.stringify({
+    text: "Retrying now that the commit exists.",
+    toolCalls: [{ name: "bash", arguments: { command: 'echo "repo description"' } }],
+  }), [bash]);
+  assert.equal(response.text, "Retrying now that the commit exists.");
+  assert.equal(response.calls.length, 1);
+  assert.equal(response.calls[0].arguments.command, 'echo "repo description"');
+});
+
+test("preamble cannot bypass tool validation or hide a malformed envelope", () => {
+  assert.throws(() => parseBridgeResponse('Checking.\n{"text":"","toolCalls":[{"name":"missing","arguments":{}}]}', [bash]), /unavailable/);
+  assert.throws(() => parseBridgeResponse('Checking.\n{"text":"","toolCalls":[', [bash]), /invalid tool-response/);
+});

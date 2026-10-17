@@ -108,12 +108,28 @@ function parseDsml(text) {
   return { text: [before, after].filter(Boolean).join("\n\n"), toolCalls };
 }
 
+function parseTrailingEnvelope(text) {
+  // Accept a standalone envelope after a model's explanatory preamble.
+  const candidates = [];
+  for (const match of text.matchAll(/^[ \t]*\{/gm)) {
+    const start = match.index + match[0].length - 1;
+    const suffix = text.slice(start).trim().replace(/\r?\n```$/, "");
+    let value;
+    try { value = JSON.parse(suffix); } catch { continue; }
+    if (value && typeof value.text === "string" && Array.isArray(value.toolCalls)) {
+      candidates.push(value);
+    }
+  }
+  if (candidates.length > 1) throw new Error("WorkBuddy returned ambiguous tool-response envelopes.");
+  return candidates[0];
+}
+
 export function parseBridgeResponse(text, tools) {
   const clean = text.trim().replace(/^```(?:json)?[ \t]*\r?\n([\s\S]*?)\r?\n?```$/i, "$1");
   let response;
   try { response = JSON.parse(clean); }
   catch {
-    response = parseDsml(text.trim());
+    response = parseDsml(text.trim()) ?? parseTrailingEnvelope(clean);
     if (!response) {
       // Ordinary final answers need no tool envelope. Broken call payloads do.
       if (!clean || /^\s*[\[{]/.test(clean) || /"toolCalls"\s*:/.test(clean)) {

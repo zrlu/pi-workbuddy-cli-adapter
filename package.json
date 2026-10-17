@@ -1,0 +1,42 @@
+{
+  "name": "pi-workbuddy-cli-adapter",
+  "version": "0.1.0",
+  "description": "Pi extension that drives the WorkBuddy AI (Tencent CodeBuddy overseas) bundled CLI headlessly as a Pi model provider, reusing the account session obtained through the CLI's own external-link login.",
+  "keywords": [
+    "pi",
+    "pi-package",
+    "pi-extension",
+    "workbuddy",
+    "codebuddy",
+    "provider",
+    "adapter"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tools.test.mjs"
+  },
+  "pi": {
+    "extensions": [
+      "./index.ts"
+    ]
+  },
+  "files": [
+    "index.ts",
+    "server.ts",
+    "auth.ts",
+    "login.mjs",
+    "cli-env.mjs",
+    "tools.mjs",
+    "tools.test.mjs",
+    "README.md",
+    "LICENSE"
+  ],
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-ai": "*"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
